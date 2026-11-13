@@ -1,0 +1,13 @@
+# Design source files and working material: keep local, don't upload to GitHub
+/Image_Segmentation/
+/Original-Ornaments/
+/Original-Ornaments web.txt
+
+# Claude Code notes: local only
+/CLAUDE.md
+/CLAUDE.local.md
+/.claude/
+
+# Dependencies and database scripts: not uploaded
+node_modules/
+*.sql

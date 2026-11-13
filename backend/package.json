@@ -1,0 +1,22 @@
+{
+  "name": "original-ornaments-backend",
+  "private": true,
+  "description": "Original Ornaments server. Run npm from here: setup, start (dev site on 3000), build, serve (built site on SERVE_PORT).",
+  "main": "app.js",
+  "scripts": {
+    "setup": "npm ci --loglevel=error --no-audit --no-fund && npm ci --loglevel=error --no-audit --no-fund --prefix ../client",
+    "start": "npm start --prefix ../client",
+    "build": "npm run build --prefix ../client",
+    "serve": "node server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.6.1",
+    "express": "^4.22.3",
+    "helmet": "^8.3.0",
+    "nodemailer": "^7.0.13",
+    "pg": "^8.23.1"
+  },
+  "engines": {
+    "node": "26.x"
+  }
+}
