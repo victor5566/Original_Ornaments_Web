@@ -61,8 +61,8 @@ async function quote(rawItems, country = null, db = pool) {
   const items = readItems(rawItems);
   const settings = await loadSettings(db);
   const { rows } = await db.query(
-    `SELECT p.id, p.product_code, p.type, p.name_en, p.name_ko, p.price, p.preorder_price,
-            COALESCE((SELECT SUM(quantity) FROM set_items s WHERE s.set_product_id = p.id), 1)::int AS pieces
+    `SELECT p.product_id, p.product_code, p.type, p.name_en, p.name_ko, p.price, p.preorder_price,
+            COALESCE((SELECT SUM(quantity) FROM set_items s WHERE s.set_product_id = p.product_id), 1)::int AS pieces
        FROM products p
       WHERE p.product_code = ANY($1) AND p.active`,
     [items.map((i) => i.sku)]

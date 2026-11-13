@@ -142,7 +142,7 @@ async function createOrder(body) {
                            pouch_gift, is_gift, payment_method, terms_agreed_at, access_token)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18,
                $19, $20, $21, now(), $22)
-       RETURNING id`,
+       RETURNING order_id`,
       [
         number, lang,
         customer.orderer_name, customer.orderer_phone, customer.orderer_email,
@@ -153,12 +153,12 @@ async function createOrder(body) {
       ]
     );
 
-    const id = rows[0].id;
+    const id = rows[0].order_id;
     for (const line of q.lines) {
       await db.query(
         `INSERT INTO order_items (order_id, product_id, product_code, name_snapshot, unit_price, quantity, line_total)
          VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [id, products.get(line.sku).id, line.sku, line.name, line.unitPrice, line.qty, line.lineTotal]
+        [id, products.get(line.sku).product_id, line.sku, line.name, line.unitPrice, line.qty, line.lineTotal]
       );
     }
 
@@ -211,10 +211,10 @@ async function findOrder(number, token) {
   const items = await pool.query(
     `SELECT i.product_code, i.name_snapshot, i.unit_price, i.quantity, i.line_total,
             COALESCE(p.type, 'single') AS type, COALESCE(p.name_ko, i.name_snapshot) AS name_ko,
-            COALESCE((SELECT SUM(quantity) FROM set_items s WHERE s.set_product_id = p.id), 1)::int AS pieces
-       FROM order_items i LEFT JOIN products p ON p.id = i.product_id
-      WHERE i.order_id = $1 ORDER BY i.id`,
-    [order.id]
+            COALESCE((SELECT SUM(quantity) FROM set_items s WHERE s.set_product_id = p.product_id), 1)::int AS pieces
+       FROM order_items i LEFT JOIN products p ON p.product_id = i.product_id
+      WHERE i.order_id = $1 ORDER BY i.order_item_id`,
+    [order.order_id]
   );
   const lines = items.rows.map((r) => ({
     sku: r.product_code,

@@ -21,8 +21,8 @@ function unitPrice(product, phase) {
 async function loadCatalog() {
   const [settings, chapters, products, pieces] = await Promise.all([
     loadSettings(),
-    pool.query("SELECT * FROM chapters ORDER BY sort_order, id"),
-    pool.query("SELECT p.*, c.chapter_code FROM products p LEFT JOIN chapters c ON c.id = p.chapter_id WHERE p.active ORDER BY p.sort_order, p.id"),
+    pool.query("SELECT * FROM chapters ORDER BY sort_order, chapter_id"),
+    pool.query("SELECT p.*, c.chapter_code FROM products p LEFT JOIN chapters c ON c.chapter_id = p.chapter_id WHERE p.active ORDER BY p.sort_order, p.product_id"),
     pool.query("SELECT set_product_id, SUM(quantity)::int AS pieces FROM set_items GROUP BY set_product_id"),
   ]);
   const piecesOf = new Map(pieces.rows.map((r) => [r.set_product_id, r.pieces]));
@@ -36,7 +36,7 @@ async function loadCatalog() {
     p && {
       sku: p.product_code,
       name: p.name_en,
-      pieces: piecesOf.get(p.id) ?? 0,
+      pieces: piecesOf.get(p.product_id) ?? 0,
       price: unitPrice(p, settings.phase),
       ko: { name: p.name_ko ?? p.name_en },
     };
@@ -74,7 +74,7 @@ async function loadCatalog() {
       storyLine: c.story_line_en,
       ko: { name: c.name_ko, intro: c.intro_ko, storyLine: c.story_line_ko },
       designs: singles
-        .filter((p) => p.chapter_id === c.id)
+        .filter((p) => p.chapter_id === c.chapter_id)
         .map((p) => ({
           slug: p.url_code,
           sku: p.product_code,
@@ -85,7 +85,7 @@ async function loadCatalog() {
           story: p.story_en ?? undefined,
           ko: { line: p.line_ko, story: p.story_ko ?? undefined },
         })),
-      set: bundle(sets.find((s) => s.chapter_id === c.id)),
+      set: bundle(sets.find((s) => s.chapter_id === c.chapter_id)),
     })),
     full: bundle(full),
   };
