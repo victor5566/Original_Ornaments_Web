@@ -1,6 +1,4 @@
-// Fixed product text that is not in the database. Chapters, designs, sets, prices and dates
-// come from the API (GET /api/catalog) and are merged with this in hooks/useCatalog.js.
-// Text in [brackets] is still to be written. `ko` holds the Korean text.
+
 
 export const catalogText = {
   version: {
