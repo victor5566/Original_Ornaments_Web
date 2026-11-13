@@ -8,6 +8,7 @@ const { pool } = require("./db/pool");
 const { loadCatalog } = require("./lib/catalog");
 const { quote, InputError } = require("./lib/pricing");
 const { createOrder, findOrder } = require("./lib/orders");
+const { subscribe } = require("./lib/subscribers");
 
 const app = express();
 
@@ -18,6 +19,29 @@ api.use(express.json({ limit: "20kb" }));
 
 
 const handle = (fn) => (req, res, next) => fn(req, res).catch(next);
+
+// At most `max` requests per visitor (IP address) in `minutes`. 
+function rateLimit(max, minutes) {
+  const windowMs = minutes * 60 * 1000;
+  const hits = new Map();
+  setInterval(() => {
+    const now = Date.now();
+    for (const [ip, times] of hits) if (times.every((t) => now - t > windowMs)) hits.delete(ip);
+  }, windowMs).unref();
+  return (req, res, next) => {
+    const now = Date.now();
+    const times = (hits.get(req.ip) ?? []).filter((t) => now - t < windowMs);
+    if (times.length >= max) {
+      const ko = req.body?.lang === "ko";
+      return res.status(429).json({
+        message: ko ? "잠시 후 다시 시도해 주세요." : "Too many tries. Please wait a few minutes and try again.",
+      });
+    }
+    times.push(now);
+    hits.set(req.ip, times);
+    next();
+  };
+}
 
 api.get("/health", handle(async (req, res) => {
   await pool.query("SELECT 1");
@@ -49,6 +73,12 @@ api.get("/orders/:number", handle(async (req, res) => {
   const order = await findOrder(req.params.number, req.query.t);
   if (!order) return res.status(404).json({ message: "Order not found" });
   res.json(order);
+}));
+
+// "Notify me" sign-up. Body: { lang, email, agreed }
+api.post("/subscribe", rateLimit(5, 10), handle(async (req, res) => {
+  await subscribe(req.body ?? {});
+  res.status(201).json({ ok: true });
 }));
 
 api.use((req, res) => res.status(404).json({ message: "Not found" }));

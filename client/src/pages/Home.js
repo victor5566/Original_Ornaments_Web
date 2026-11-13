@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { PageState, Placeholder, SparkleList } from "../components/Bits";
+import { ErrorText, PageState, Placeholder, SparkleList } from "../components/Bits";
 import Moon from "../components/Moon";
 import Ornament from "../components/Ornament";
 import SetCard, { useAddLabel, useDiscountNote, useOrderButtons } from "../components/SetCard";
 import { useCatalog } from "../hooks/useCatalog";
 import { useLang } from "../i18n/LangContext";
+import { postJson } from "../lib/api";
 import { lastDay } from "../lib/format";
 
 const POEM = {
@@ -349,49 +350,86 @@ function YourLights() {
 }
 
 function Archive() {
-  const { t } = useLang();
+  const { lang, t } = useLang();
   const [email, setEmail] = useState("");
+  const [agreed, setAgreed] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState(null);
   const [done, setDone] = useState(false);
 
-  // No mailing list yet: only shows the thank-you message
-  const submit = (e) => {
+  // Saves the address for next year's announcement (POST /api/subscribe)
+  const submit = async (e) => {
     e.preventDefault();
-    setDone(true);
+    if (sending) return;
+    setError(null);
+    setSending(true);
+    try {
+      await postJson("/api/subscribe", { lang, email, agreed });
+      setDone(true);
+    } catch (err) {
+      setError(err);
+      document.getElementById(err.field === "agree" ? "archive-agree" : "archive-email")?.focus();
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
-    <section className="bg-gradient-to-b from-deep to-burgundy py-20 text-center sm:py-24">
+    <section className="bg-dark py-20 text-center sm:py-28">
       <div className="oo-container">
         <p className="oo-eyebrow">The archive</p>
-        <h2 className="oo-h2 mt-3">{t("2026, the first light", "2026, 첫 번째 빛")}</h2>
-        <p className="oo-small mx-auto mt-3 max-w-md text-body">
+        <h2 className="oo-h2 mt-4">{t("2026, the first light", "2026, 첫 번째 빛")}</h2>
+        <p className="oo-lead mx-auto mt-4 max-w-2xl text-[#e1d5c7]">
           {t(
             "A new light joins the archive every year. Be the first to know when next year's arrives.",
             "해마다 새로운 빛이 이곳에 하나씩 쌓입니다. 다음 해의 빛이 도착하면 가장 먼저 알려 드릴게요."
           )}
         </p>
         {done ? (
-          <p className="oo-tagline mt-8">
+          <p className="oo-tagline mt-10">
             {t("Thank you. We'll write when the next light arrives.", "고맙습니다. 다음 빛이 도착하면 알려 드릴게요.")}
           </p>
         ) : (
-          <form onSubmit={submit} className="mx-auto mt-8 flex max-w-md flex-col gap-3 sm:flex-row">
-            <label htmlFor="archive-email" className="sr-only">
-              {t("Email address", "이메일 주소")}
+          <form onSubmit={submit} className="mx-auto mt-10 max-w-[33rem]">
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <label htmlFor="archive-email" className="sr-only">
+                {t("Email address", "이메일 주소")}
+              </label>
+              <input
+                id="archive-email"
+                type="email"
+                required
+                maxLength={255}
+                autoComplete="email"
+                placeholder={t("Email address", "이메일 주소")}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                aria-invalid={error?.field === "email" || undefined}
+                className="oo-field h-12 rounded-full !border-gold !bg-transparent px-6"
+              />
+              <button type="submit" className="oo-btn oo-btn-gold h-12 shrink-0 px-8" disabled={sending}>
+                {sending ? t("Sending…", "보내는 중…") : t("Notify me", "다음 빛 알림 받기")}
+              </button>
+            </div>
+            <label className="oo-caption mt-4 flex cursor-pointer gap-3 px-1 text-left">
+              <input
+                id="archive-agree"
+                type="checkbox"
+                required
+                checked={agreed}
+                onChange={(e) => setAgreed(e.target.checked)}
+                className="mt-0.5 size-4 shrink-0 accent-gold [color-scheme:dark]"
+              />
+              <span>
+                {t(
+                  "I agree to receive an email when next year's light arrives. We keep only your email address, use it only for this, and delete it when you unsubscribe.",
+                  "다음 해의 빛 출시 소식을 이메일로 받는 데 동의합니다. (수집 항목: 이메일 주소 · 이용 목적: 신제품 출시 알림 · 보유 기간: 수신 거부 시까지)"
+                )}
+              </span>
             </label>
-            <input
-              id="archive-email"
-              type="email"
-              required
-              autoComplete="email"
-              placeholder={t("Email address", "이메일 주소")}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="oo-field rounded-full !bg-black/30"
-            />
-            <button type="submit" className="oo-btn oo-btn-gold shrink-0">
-              {t("Notify me", "다음 빛 알림 받기")}
-            </button>
+            <div className="mt-3 text-left">
+              <ErrorText error={error} />
+            </div>
           </form>
         )}
       </div>
