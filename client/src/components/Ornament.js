@@ -2,11 +2,16 @@ import { useState } from "react";
 import { useLang } from "../i18n/LangContext";
 
 
-export default function Ornament({ slug, name, className = "" }) {
-  const [missing, setMissing] = useState(false);
-  const { t } = useLang();
+export const photoUrl = (slug, view = "front") =>
+  view === "back" ? "/ornaments/photo/back.webp" : `/ornaments/photo/${slug}${view === "front" ? "" : `-${view}`}.webp`;
 
-  if (missing || !slug) {
+// The ornament's front: the photo, else the illustration, else a placeholder disc
+export default function Ornament({ slug, name, className = "" }) {
+  const [failed, setFailed] = useState([]);
+  const { t } = useLang();
+  const src = slug && [photoUrl(slug), `/ornaments/${slug}.png`].find((s) => !failed.includes(s));
+
+  if (!src) {
     return (
       <div
         role="img"
@@ -23,9 +28,10 @@ export default function Ornament({ slug, name, className = "" }) {
 
   return (
     <img
-      src={`/ornaments/${slug}.png`}
+      key={src}
+      src={src}
       alt={name ? t(`${name} ornament`, `${name} 오너먼트`) : ""}
-      onError={() => setMissing(true)}
+      onError={() => setFailed((f) => [...f, src])}
       className={`aspect-square rounded-full object-cover ${className}`}
     />
   );

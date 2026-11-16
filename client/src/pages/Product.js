@@ -3,18 +3,50 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useCart } from "../cart/CartContext";
 import { PageState, Placeholder, QtyStepper, SparkleList } from "../components/Bits";
 import { ExchangeModal, NacrePhotos, usePolicy } from "../components/ExchangePolicy";
-import Ornament from "../components/Ornament";
+import Ornament, { photoUrl } from "../components/Ornament";
 import { useAddLabel, useOrderButtons } from "../components/SetCard";
 import { useCatalog } from "../hooks/useCatalog";
 import { useLang } from "../i18n/LangContext";
 import { lastDay } from "../lib/format";
 import NotFound from "./NotFound";
 
-// Gallery views after the front image
-const VIEWS = {
-  en: ["Back", "Nacre close-up", "In hand", "On the tree"],
-  ko: ["뒷면", "자개 결 접사", "손에 든 컷", "트리에 건 컷"],
+// Gallery views. Every one except "tree" has a photo (see components/Ornament.js photoUrl).
+const VIEWS = [
+  { id: "front", en: "Front", ko: "정면" },
+  { id: "back", en: "Back", ko: "뒷면" },
+  { id: "nacre", en: "Nacre close-up", ko: "자개 결 접사" },
+  { id: "hanging", en: "With ribbon", ko: "리본을 단 모습" },
+  { id: "tree", en: "On the tree", ko: "트리에 건 컷" },
+];
+
+// How each photo sits in the square frame: the big view, then the thumbnail
+const VIEW_IMG = {
+  back: ["w-[72%] rounded-full", "w-[80%] rounded-full"],
+  nacre: ["size-full object-cover", "size-full object-cover"],
+  hanging: ["h-[92%] w-auto object-contain", "h-full w-auto object-contain"],
 };
+
+// One gallery view: the photo, or a placeholder when it doesn't exist (yet)
+function GalleryView({ design, view, label, thumb = false }) {
+  const { t } = useLang();
+  const [missing, setMissing] = useState(false);
+  if (view === "front") return <Ornament slug={design.slug} name={thumb ? "" : design.name} className={thumb ? "w-[80%]" : "w-[72%]"} />;
+  if (missing || !VIEW_IMG[view]) {
+    return thumb ? (
+      <span className="oo-micro !text-[10px] leading-tight">[{label}]</span>
+    ) : (
+      <Placeholder label={label} className="size-[72%] rounded-full" />
+    );
+  }
+  return (
+    <img
+      src={photoUrl(design.slug, view)}
+      alt={thumb ? "" : t(`${design.name}: ${label.toLowerCase()}`, `${design.name}: ${label}`)}
+      onError={() => setMissing(true)}
+      className={VIEW_IMG[view][thumb ? 1 : 0]}
+    />
+  );
+}
 
 export default function Product() {
   const { slug } = useParams();
@@ -42,7 +74,7 @@ function ProductView({ catalog, chapter, design }) {
   const { preorder: dates, prices } = catalog;
   const NAME = design.name.toUpperCase();
   const chapterName = pick(chapter, "name");
-  const views = VIEWS[lang];
+  const views = VIEWS.map((v) => v[lang]);
 
   useEffect(() => {
     document.title = `${NAME} · Original Ornaments`;
@@ -77,12 +109,13 @@ function ProductView({ catalog, chapter, design }) {
         <div className="mt-6 grid gap-10 pb-24 lg:grid-cols-2 lg:gap-14">
           {/* Gallery */}
           <div>
-            <div className="relative flex aspect-square items-center justify-center bg-deep">
-              {view === 0 ? (
-                <Ornament slug={design.slug} name={design.name} className="w-[72%]" />
-              ) : (
-                <Placeholder label={views[view - 1]} className="size-[72%] rounded-full" />
-              )}
+            <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-deep">
+              <GalleryView
+                key={`${design.slug}-${VIEWS[view].id}`}
+                design={design}
+                view={VIEWS[view].id}
+                label={views[view]}
+              />
               <p className="oo-micro absolute right-4 bottom-3 left-4 !text-[11px]">
                 {t(
                   "[6-second product loop · light sweeps the nacre, then the ornament turns to its back]",
@@ -91,22 +124,24 @@ function ProductView({ catalog, chapter, design }) {
               </p>
             </div>
             <div className="mt-3 grid grid-cols-5 gap-2 sm:gap-3">
-              {[t("Front", "정면"), ...views].map((label, i) => (
+              {views.map((label, i) => (
                 <button
                   key={label}
                   type="button"
                   onClick={() => setView(i)}
                   aria-label={t(`Show ${label.toLowerCase()}`, `${label} 보기`)}
                   aria-pressed={view === i}
-                  className={`flex aspect-square items-center justify-center border p-1 ${
-                    view === i ? "border-gold" : "border-dashed border-line-strong"
+                  className={`flex aspect-square items-center justify-center overflow-hidden border bg-deep p-1 ${
+                    view === i ? "border-gold" : "border-line hover:border-line-strong"
                   }`}
                 >
-                  {i === 0 ? (
-                    <Ornament slug={design.slug} name="" className="w-[80%]" />
-                  ) : (
-                    <span className="oo-micro !text-[10px] leading-tight">[{label}]</span>
-                  )}
+                  <GalleryView
+                    key={`${design.slug}-${VIEWS[i].id}`}
+                    design={design}
+                    view={VIEWS[i].id}
+                    label={label}
+                    thumb
+                  />
                 </button>
               ))}
             </div>
