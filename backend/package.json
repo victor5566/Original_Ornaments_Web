@@ -7,13 +7,16 @@
     "setup": "npm ci --loglevel=error --no-audit --no-fund && npm ci --loglevel=error --no-audit --no-fund --prefix ../client",
     "start": "npm start --prefix ../client",
     "build": "npm run build --prefix ../client",
-    "serve": "node server.js"
+    "serve": "node server.js",
+    "refund": "node scripts/refund.js",
+    "ship": "node scripts/ship.js",
+    "cancel-unpaid": "node scripts/cancel-unpaid.js"
   },
   "dependencies": {
     "dotenv": "^16.6.1",
     "express": "^4.22.3",
     "helmet": "^8.3.0",
-    "nodemailer": "^7.0.13",
+    "nodemailer": "^10.6.0",
     "pg": "^8.23.1"
   },
   "engines": {

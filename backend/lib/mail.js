@@ -28,7 +28,7 @@ const escape = (s) =>
   String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
 
-function compose({ number, lang, quote: q, customer, address, settings, token }) {
+function compose({ number, lang, quote: q, usd, customer, address, settings, token }) {
   const ko = lang === "ko";
   const t = (en, k) => (ko ? k : en);
   const site = process.env.SITE_URL?.replace(/\/$/, "");
@@ -37,7 +37,7 @@ function compose({ number, lang, quote: q, customer, address, settings, token })
   const rows = (items) => blocks.push({ type: "rows", items });
 
   para(t(`Hello ${customer.orderer_name},`, `${customer.orderer_name}님, 안녕하세요.`));
-  para(t(`Thank you. We have received your order ${number}.`, `주문해 주셔서 감사합니다. 주문번호 ${number}로 접수되었습니다.`));
+  para(t(`Thank you. Your payment is complete and we have received your order ${number}.`, `주문해 주셔서 감사합니다. 결제가 완료되어 주문번호 ${number}로 접수되었습니다.`));
   if (q.phase === "preorder" && settings.ships_from) {
     const date = shortDate(settings.ships_from, ko);
     para(t(
@@ -51,6 +51,7 @@ function compose({ number, lang, quote: q, customer, address, settings, token })
   if (q.discount > 0) totals.push([t("Discount", "할인"), `−${won(q.discount, ko)}`]);
   totals.push([t("Shipping", "배송비"), q.shippingFee != null ? won(q.shippingFee, ko) : t("[To be confirmed]", "[추후 안내]")]);
   totals.push([t("Total", "합계"), won(q.total, ko)]);
+  if (usd) totals.push([t("Paid with PayPal", "PayPal 결제 금액"), `$${usd} (USD)`]);
   rows(totals);
 
   // Order notes: pre-order gift, gift wrapping, duties

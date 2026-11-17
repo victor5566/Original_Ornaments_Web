@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useCart } from "../cart/CartContext";
-import { ErrorText, PageState } from "../components/Bits";
+import { ErrorText, PageState, UsdNote } from "../components/Bits";
 import { ExchangeModal } from "../components/ExchangePolicy";
 import Ornament from "../components/Ornament";
 import PostcodeSearch from "../components/PostcodeSearch";
@@ -21,22 +21,6 @@ const COUNTRIES = [
   ["GB", "United Kingdom"],
   ["AU", "Australia"],
 ];
-
-// The English site takes international cards and wallets; the Korean site the Korean ones (from the Korean mockup)
-const PAYMENTS = {
-  en: [
-    ["card", "Credit card"],
-    ["paypal", "PayPal"],
-    ["applepay", "Apple Pay"],
-    ["googlepay", "Google Pay"],
-  ],
-  ko: [
-    ["card", "신용카드"],
-    ["kakaopay", "카카오페이"],
-    ["naverpay", "네이버페이"],
-    ["tosspay", "토스페이"],
-  ],
-};
 
 const EMPTY = {
   // both forms
@@ -78,7 +62,6 @@ export default function Checkout() {
   }, []);
   const [shipAsGift, setShipAsGift] = useState(false);
   const [sameRecipient, setSameRecipient] = useState(true);
-  const [payment, setPayment] = useState("card");
   const [agreed, setAgreed] = useState(false);
   const [policyOpen, setPolicyOpen] = useState(false);
   const [sending, setSending] = useState(false);
@@ -95,7 +78,7 @@ export default function Checkout() {
   });
 
   // Saves the order (POST /api/orders); the server checks the form and prices the cart.
-  // Payment is not connected yet, so the order is saved as "pending".
+  // The order is saved as "pending"; its page then shows the PayPal buttons.
   const submit = async (e) => {
     e.preventDefault();
     if (!agreed) {
@@ -111,7 +94,6 @@ export default function Checkout() {
         items: cart.items.map(({ sku, qty }) => ({ sku, qty })),
         gift: cart.gift,
         agreed,
-        payment,
         customer: form,
         sameRecipient,
         shipAsGift,
@@ -126,9 +108,6 @@ export default function Checkout() {
     }
   };
 
-  // Switching language can leave a payment id the other list doesn't have; fall back to card
-  const payments = PAYMENTS[lang];
-  const paymentLabel = (payments.find(([id]) => id === payment) ?? payments[0])[1];
   const abroad = !ko && form.country !== "KR";
 
   return (
@@ -149,32 +128,21 @@ export default function Checkout() {
 
         <fieldset className="mt-12">
           <legend className="oo-h3 !font-normal">{t("3. Payment", "3. 결제 수단")}</legend>
-          <div
-            className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4"
-            role="radiogroup"
-            aria-label={t("Payment method", "결제 수단")}
-          >
-            {payments.map(([id, label]) => (
-              <button
-                key={id}
-                type="button"
-                role="radio"
-                aria-checked={payment === id}
-                onClick={() => setPayment(id)}
-                className={`h-12 border text-sm font-medium transition-colors ${
-                  payment === id ? "border-gold bg-dark text-strong" : "border-line text-body hover:border-line-strong"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
+          <div className="mt-6 border border-gold bg-dark p-5">
+            <p className="oo-label">PayPal</p>
+            <p className="oo-small mt-2 text-body">
+              {t(
+                "Pay with your PayPal account, or with a debit or credit card through PayPal. You don't need a PayPal account to pay by card.",
+                "PayPal 계정 또는 PayPal을 통한 신용·체크카드로 결제합니다. 카드 결제는 PayPal 계정이 없어도 돼요."
+              )}
+            </p>
+            <p className="oo-caption mt-2">
+              {t(
+                "Prices are shown in won; PayPal charges the total in US dollars.",
+                "가격은 원화로 표시되며, 결제는 미국 달러(USD)로 진행됩니다."
+              )}
+            </p>
           </div>
-          <p className="oo-caption mt-3">
-            {t(
-              "[Payment not connected yet: the order is saved without payment.]",
-              "[결제는 아직 연결되지 않았어요. 주문만 저장됩니다.]"
-            )}
-          </p>
         </fieldset>
       </div>
 
@@ -238,6 +206,7 @@ export default function Checkout() {
           <span className="oo-small text-strong">{t("Total (KRW)", "합계")}</span>
           <span className="oo-price-l">{quote ? won(quote.total) : "…"}</span>
         </div>
+        {quote && <UsdNote usd={quote.usd} className="mt-1 text-right" />}
 
         <label className="oo-caption mt-6 flex cursor-pointer gap-3 !text-body">
           <input
@@ -269,7 +238,7 @@ export default function Checkout() {
         <button type="submit" className="oo-btn oo-btn-gold mt-6 w-full py-3.5" disabled={!quote || sending}>
           {sending
             ? t("Placing order…", "주문하는 중…")
-            : t(`Pay with ${paymentLabel}`, `${paymentLabel}로 ${quote ? won(quote.total) : ""} 결제하기`)}
+            : t("Continue to PayPal", "PayPal로 결제하기")}
         </button>
 
         <p className="oo-caption mt-4 text-center">

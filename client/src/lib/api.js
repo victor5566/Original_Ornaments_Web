@@ -9,6 +9,7 @@ async function request(path, options = {}) {
     const err = new Error(body?.message || `Request failed (${res.status})`);
     err.status = res.status;
     err.field = body?.field;
+    err.retry = body?.retry === true; // PayPal declined the card or account: the buyer can try another
     throw err;
   }
   return body;

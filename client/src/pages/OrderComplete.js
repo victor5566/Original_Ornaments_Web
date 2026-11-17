@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation, useParams, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { PageState } from "../components/Bits";
 import Moon from "../components/Moon";
+import PayPalButtons from "../components/PayPalButtons";
 import { useCatalog } from "../hooks/useCatalog";
 import { useLang } from "../i18n/LangContext";
 import { getJson } from "../lib/api";
@@ -9,6 +10,7 @@ import { getJson } from "../lib/api";
 
 export default function OrderComplete() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { number } = useParams();
   const [params] = useSearchParams();
   const token = params.get("t");
@@ -33,6 +35,65 @@ export default function OrderComplete() {
   const names = order
     ? joinNames(order.lines.map((l) => (l.kind === "single" ? l.name.toUpperCase() : ko ? l.nameKo : l.name)))
     : t("[Items]", "[상품]");
+  // Not paid yet: the PayPal step. Once paid, the page below replaces it (also after a reload).
+  if (order?.status === "pending") {
+    return (
+      <div className="oo-container max-w-2xl pt-10 pb-24 text-center sm:pt-16">
+        <Moon className="mx-auto w-28 sm:w-32" />
+        <p className="oo-eyebrow mt-8">Order {order.number}</p>
+        <h1 className="oo-h1 mt-5">{t("One step left: payment", "이제 결제만 남았어요")}</h1>
+        <p className="oo-lead mx-auto mt-5 max-w-xl text-body">
+          {t(
+            "Your order is saved. It is confirmed, and the email sent, once PayPal takes the payment.",
+            "주문이 저장되었어요. PayPal 결제가 끝나면 주문이 확정되고 확인 메일을 보내 드려요."
+          )}
+        </p>
+        <dl className="oo-small mt-8 space-y-3 border border-dark p-6 text-left sm:px-7">
+          <Row term={t("Items", "상품")} value={names} />
+          <Row term={t("Ship to", "받는 분")} value={order.shipTo} />
+          <Row term={t("Total", "합계")} value={won(order.total)} />
+          <Row term={t("Paid in US dollars", "결제 금액 (USD)")} value={`$${order.usd}`} />
+        </dl>
+        <div className="mx-auto mt-8 max-w-sm">
+          <PayPalButtons
+            clientId={catalog.payment?.paypalClientId}
+            number={order.number}
+            token={token}
+            onPaid={(paid) => navigate(`/order/${paid.number}?t=${token}`, { replace: true, state: { order: paid } })}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Cancelled (not paid in time) or refunded: say so instead of "on its way"
+  if (order?.status === "cancelled" || order?.status === "refunded") {
+    const cancelled = order.status === "cancelled";
+    return (
+      <div className="oo-container max-w-2xl pt-10 pb-24 text-center sm:pt-16">
+        <Moon className="mx-auto w-28 sm:w-32" />
+        <p className="oo-eyebrow mt-8">Order {order.number}</p>
+        <h1 className="oo-h1 mt-5">
+          {cancelled ? t("This order was cancelled", "주문이 취소되었어요") : t("This order was refunded", "환불된 주문이에요")}
+        </h1>
+        <p className="oo-lead mx-auto mt-5 max-w-xl text-body">
+          {cancelled
+            ? t(
+                "It wasn't paid in time, so nothing was charged. You're welcome to place a new order.",
+                "결제 기한이 지나 주문이 취소되었고, 결제된 금액은 없어요. 다시 주문해 주세요."
+              )
+            : t(
+                `The payment of ${won(order.total)} ($${order.usd} USD) was given back through PayPal.`,
+                `결제 금액 ${won(order.total)} ($${order.usd} USD)은 PayPal로 환불되었어요.`
+              )}
+        </p>
+        <Link to="/" className="oo-btn oo-btn-outline mt-8">
+          {t("Keep browsing", "다른 빛 둘러보기")}
+        </Link>
+      </div>
+    );
+  }
+
   const plural = !order || order.pieces > 1;
   const preorder = order ? order.preorder : catalog.phase === "preorder";
   const shipsFrom = shortDate(order?.shipsFrom ?? catalog.preorder.shipsFrom);
@@ -63,7 +124,13 @@ export default function OrderComplete() {
       <dl className="oo-small mt-8 space-y-3 border border-dark p-6 text-left sm:px-7">
         <Row term={t("Ship to", "받는 분")} value={order?.shipTo || t("[Name]", "[이름]")} />
         <Row term={t("Address", "배송지")} value={order?.address || t("[Address]", "[주소]")} />
-        <Row term={t("Total paid", "결제 금액")} value={order ? won(order.total) : t("[₩00,000]", "[00,000원]")} />
+        <Row
+          term={t("Total paid", "결제 금액")}
+          value={order ? `${won(order.total)}${order.usd ? ` ($${order.usd} USD)` : ""}` : t("[₩00,000]", "[00,000원]")}
+        />
+        {order?.tracking && (
+          <Row term={t("Tracking", "운송장 번호")} value={`${order.tracking.carrier} ${order.tracking.number}`} />
+        )}
         {(order?.pouchGift || order?.isGift) && (
           <div className="space-y-1 border-t border-dark pt-3">
             {order.pouchGift && (

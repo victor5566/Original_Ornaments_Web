@@ -65,6 +65,8 @@ async function loadCatalog() {
       feeIntl: settings.shipping_fee_intl, // null: not decided yet
     },
     contactEmail: settings.contact_email,
+    // PayPal charges in US dollars; the client ID is public (the secret stays on the server)
+    payment: { currency: "USD", usdKrwRate: Number(settings.usd_krw_rate), paypalClientId: process.env.PAYPAL_CLIENT_ID || null },
     chapters: chapters.rows.map((c) => ({
       slug: c.chapter_code,
       numeral: c.numeral,

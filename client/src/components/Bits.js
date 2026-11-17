@@ -85,6 +85,17 @@ export function PageState({ error }) {
   );
 }
 
+// "Paid in US dollars (≈ $18.64)": PayPal charges in USD, prices are shown in won
+export function UsdNote({ usd, className = "" }) {
+  const { t } = useLang();
+  if (!usd) return null;
+  return (
+    <p className={`oo-micro ${className}`}>
+      {t(`Paid in US dollars via PayPal: $${usd}`, `PayPal 결제 시 미국 달러(USD)로 결제돼요: $${usd}`)}
+    </p>
+  );
+}
+
 export function ErrorText({ error }) {
   if (!error) return null;
   return (

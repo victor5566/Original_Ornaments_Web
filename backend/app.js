@@ -9,12 +9,31 @@ const { loadCatalog } = require("./lib/catalog");
 const { quote, InputError } = require("./lib/pricing");
 const { createOrder, findOrder } = require("./lib/orders");
 const { subscribe } = require("./lib/subscribers");
+const { startPayPal, finishPayPal } = require("./lib/payments");
+const { verifySignature, handleEvent } = require("./lib/webhooks");
 
 const app = express();
 
 app.disable("x-powered-by");
 
 const api = express.Router();
+
+// PayPal webhooks (lib/webhooks.js). Before express.json: the signature covers the raw body.
+// 400 for a bad signature; 500 makes PayPal send the event again later.
+api.post("/paypal/webhook", express.raw({ type: "application/json", limit: "100kb" }), async (req, res) => {
+  try {
+    if (!Buffer.isBuffer(req.body) || !(await verifySignature(req.headers, req.body))) {
+      console.warn("PayPal webhook with a missing or wrong signature: ignored");
+      return res.status(400).json({ message: "Bad signature" });
+    }
+    await handleEvent(JSON.parse(req.body.toString("utf8")));
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("PayPal webhook failed:", err);
+    res.status(500).json({ message: "Webhook failed" });
+  }
+});
+
 api.use(express.json({ limit: "20kb" }));
 
 
@@ -63,7 +82,7 @@ api.post("/quote", handle(async (req, res) => {
 
 // Place an order. Body: { lang, items, gift, agreed, payment, customer: {...checkout form}, sameRecipient, shipAsGift }
 // Answers with the order complete page data and a token for its private link.
-api.post("/orders", handle(async (req, res) => {
+api.post("/orders", rateLimit(10, 10), handle(async (req, res) => {
   res.status(201).json(await createOrder(req.body ?? {}));
 }));
 
@@ -73,6 +92,17 @@ api.get("/orders/:number", handle(async (req, res) => {
   const order = await findOrder(req.params.number, req.query.t);
   if (!order) return res.status(404).json({ message: "Order not found" });
   res.json(order);
+}));
+
+// PayPal, step 1: a PayPal order for this order's total in USD. Answers { id } for the PayPal buttons.
+api.post("/orders/:number/paypal", rateLimit(20, 10), handle(async (req, res) => {
+  res.json(await startPayPal(req.params.number, req.query.t, req.body?.lang));
+}));
+
+// PayPal, step 2: after the buyer approves, take the money. Body: { lang, paypalOrderId }.
+// Answers with the order complete page data (status "paid").
+api.post("/orders/:number/paypal/capture", rateLimit(20, 10), handle(async (req, res) => {
+  res.json(await finishPayPal(req.params.number, req.query.t, req.body?.paypalOrderId));
 }));
 
 // "Notify me" sign-up. Body: { lang, email, agreed }
@@ -87,7 +117,7 @@ api.use((req, res) => res.status(404).json({ message: "Not found" }));
 api.use((err, req, res, next) => {
   const ko = req.body?.lang === "ko";
   if (err instanceof InputError) {
-    return res.status(400).json({ message: ko ? err.ko : err.message, field: err.field });
+    return res.status(400).json({ message: ko ? err.ko : err.message, field: err.field, retry: err.retry || undefined });
   }
   if (err.type === "entity.parse.failed" || err.type === "entity.too.large") {
     return res.status(400).json({ message: "The request could not be read." });

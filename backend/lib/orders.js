@@ -1,16 +1,11 @@
 // Saves an order: checks the checkout form, prices the cart from the database and writes
-// orders + order_items in one transaction. Payment is not connected yet, so orders stay "pending".
+// orders + order_items in one transaction. The order stays "pending" until PayPal is paid (lib/payments.js).
 const crypto = require("crypto");
 const { pool, transaction } = require("../db/pool");
-const { quote, InputError } = require("./pricing");
-const { sendOrderEmail } = require("./mail");
+const { quote, toUsd, InputError } = require("./pricing");
 
 const COUNTRIES = new Set(["KR", "JP", "TW", "HK", "SG", "US", "CA", "GB", "AU"]);
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PAYMENTS = {
-  en: new Set(["card", "paypal", "applepay", "googlepay"]),
-  ko: new Set(["card", "kakaopay", "naverpay", "tosspay"]),
-};
 
 
 function particle(word, withFinal, without) {
@@ -121,7 +116,6 @@ async function createOrder(body) {
       "agree"
     );
   }
-  const payment = PAYMENTS[lang].has(body.payment) ? body.payment : "card";
   const customer = readCustomer({ ...body, lang });
   const token = crypto.randomBytes(24).toString("hex");
 
@@ -149,7 +143,7 @@ async function createOrder(body) {
         customer.recipient_name, customer.recipient_phone, customer.country, customer.postal_code,
         customer.address1, customer.address2, customer.city, customer.region, customer.delivery_note,
         q.subtotal, q.discount, q.shippingFee ?? 0, q.total,
-        q.pouchGift?.eligible === true, customer.is_gift, payment, token,
+        q.pouchGift?.eligible === true, customer.is_gift, "paypal", token,
       ]
     );
 
@@ -162,61 +156,73 @@ async function createOrder(body) {
       );
     }
 
-    return {
-      page: completePage({
-        number,
-        preorder: q.phase === "preorder",
-        shipsFrom: settings.ships_from,
-        lines: q.lines,
-        pieces: q.pieces,
-        total: q.total,
-        pouchGift: q.pouchGift?.eligible === true,
-        customer,
-      }),
-      email: { lang, quote: q, customer, address: addressLine(customer), settings, token },
-    };
+    return completePage({
+      number,
+      status: "pending",
+      preorder: q.phase === "preorder",
+      shipsFrom: settings.ships_from,
+      lines: q.lines,
+      pieces: q.pieces,
+      total: q.total,
+      usd: q.usd,
+      pouchGift: q.pouchGift?.eligible === true,
+      customer,
+    });
   });
 
-  // The confirmation email goes out after the order is saved; a mail problem never fails the order
-  sendOrderEmail({ number: order.page.number, ...order.email }).catch((err) =>
-    console.error(`Order ${order.page.number}: confirmation email not sent:`, err.message)
-  );
-  return { ...order.page, token };
+  // The confirmation email goes out once PayPal is paid (lib/payments.js)
+  return { ...order, token };
 }
 
-// What the order complete page shows
-function completePage({ number, preorder, shipsFrom, lines, pieces, total, pouchGift, customer }) {
+// What the order complete page shows. `status` "pending" means not paid yet: the page shows the PayPal buttons.
+// `usd`: what PayPal charges (or charged) in US dollars.
+function completePage({ number, status, preorder, shipsFrom, lines, pieces, total, usd, pouchGift, customer }) {
   return {
-    number, preorder, shipsFrom, lines, pieces, total, pouchGift,
+    number, status, preorder, shipsFrom, lines, pieces, total, usd, pouchGift,
     isGift: customer.is_gift === true,
     shipTo: customer.recipient_name,
     address: addressLine(customer),
+    tracking: customer.tracking_number ? { carrier: customer.carrier, number: customer.tracking_number } : null,
   };
 }
 
-// An order for its complete page, opened again from the link (/order/<number>?t=<token>).
-// Returns null unless the token matches.
-async function findOrder(number, token) {
+// The order row plus the store settings it needs. paid_usd: the PayPal payment that was taken.
+const ORDER_ROW = `
+  SELECT o.*, s.ships_from, s.preorder_end, s.usd_krw_rate,
+         (SELECT p.amount FROM payments p WHERE p.order_id = o.order_id AND p.payment_key IS NOT NULL
+            AND p.status IN ('approved', 'partial_cancelled', 'cancelled')
+           ORDER BY p.approved_at DESC LIMIT 1) AS paid_usd
+    FROM orders o CROSS JOIN store_settings s`;
+
+// For the server only (webhooks, scripts): no token check
+async function orderById(orderId, db = pool) {
+  const { rows } = await db.query(`${ORDER_ROW} WHERE o.order_id = $1`, [orderId]);
+  return rows[0] ?? null;
+}
+
+// The order row for /order/<number>?t=<token>. Returns null unless the token matches.
+async function orderByToken(number, token, db = pool) {
   if (typeof number !== "string" || typeof token !== "string" || token.length !== 48) return null;
-  const { rows } = await pool.query(
-    `SELECT o.*, s.ships_from, s.preorder_end FROM orders o CROSS JOIN store_settings s WHERE o.order_number = $1`,
-    [number]
-  );
+  const { rows } = await db.query(`${ORDER_ROW} WHERE o.order_number = $1`, [number]);
   const order = rows[0];
   if (!order?.access_token) return null;
   const a = Buffer.from(order.access_token);
   const b = Buffer.from(token);
   if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+  return order;
+}
 
-  const items = await pool.query(
+// The saved lines of an order, shaped like quote lines
+async function orderLines(orderId, db = pool) {
+  const items = await db.query(
     `SELECT i.product_code, i.name_snapshot, i.unit_price, i.quantity, i.line_total,
             COALESCE(p.type, 'single') AS type, COALESCE(p.name_ko, i.name_snapshot) AS name_ko,
             COALESCE((SELECT SUM(quantity) FROM set_items s WHERE s.set_product_id = p.product_id), 1)::int AS pieces
        FROM order_items i LEFT JOIN products p ON p.product_id = i.product_id
       WHERE i.order_id = $1 ORDER BY i.order_item_id`,
-    [order.order_id]
+    [orderId]
   );
-  const lines = items.rows.map((r) => ({
+  return items.rows.map((r) => ({
     sku: r.product_code,
     kind: r.type,
     name: r.name_snapshot,
@@ -226,16 +232,29 @@ async function findOrder(number, token) {
     unitPrice: r.unit_price,
     lineTotal: r.line_total,
   }));
+}
+
+
+const placedInPreorder = (order) => order.preorder_end != null && order.created_at < order.preorder_end;
+
+// An order for its complete page, opened again from the link (/order/<number>?t=<token>).
+// Returns null unless the token matches.
+async function findOrder(number, token, db = pool) {
+  const order = await orderByToken(number, token, db);
+  if (!order) return null;
+  const lines = await orderLines(order.order_id, db);
   return completePage({
     number: order.order_number,
-    preorder: order.preorder_end != null && order.created_at < order.preorder_end, // placed before the pre-order closed
+    status: order.status,
+    preorder: placedInPreorder(order),
     shipsFrom: order.ships_from,
     lines,
     pieces: lines.reduce((n, l) => n + l.pieces, 0),
     total: order.total,
+    usd: order.paid_usd ?? toUsd(order.total, order.usd_krw_rate),
     pouchGift: order.pouch_gift,
     customer: order,
   });
 }
 
-module.exports = { createOrder, findOrder };
+module.exports = { createOrder, findOrder, orderById, orderByToken, orderLines, placedInPreorder, addressLine };

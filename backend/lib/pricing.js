@@ -54,6 +54,12 @@ function shippingFor(country, goods, settings) {
   return settings.shipping_fee_intl;
 }
 
+// Won -> the US dollar amount PayPal charges, as a string with cents ("18.64").
+// The rate (won per dollar) is store_settings.usd_krw_rate.
+function toUsd(krw, rate) {
+  return (Math.round((Number(krw) * 100) / Number(rate)) / 100).toFixed(2);
+}
+
 // Returns the quote, plus `products` (sku -> row) for saving an order.
 // Codes that aren't on sale are listed in `missing` and left out of the totals.
 // `country` (ISO code, or null) decides the shipping fee.
@@ -106,6 +112,7 @@ async function quote(rawItems, country = null, db = pool) {
       discount,
       shippingFee,
       total: subtotal - discount + (shippingFee ?? 0),
+      usd: toUsd(subtotal - discount + (shippingFee ?? 0), settings.usd_krw_rate),
       pouchGift: settings.phase === "preorder" ? { eligible: needed === 0, needed } : null,
     },
     products,
@@ -113,4 +120,4 @@ async function quote(rawItems, country = null, db = pool) {
   };
 }
 
-module.exports = { quote, InputError };
+module.exports = { quote, toUsd, InputError };

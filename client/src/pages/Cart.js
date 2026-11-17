@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { MAX_QTY, useCart } from "../cart/CartContext";
-import { PageState, QtyStepper } from "../components/Bits";
+import { PageState, QtyStepper, UsdNote } from "../components/Bits";
 import { ExchangeModal } from "../components/ExchangePolicy";
 import Ornament from "../components/Ornament";
 import { indexCatalog, useCatalog } from "../hooks/useCatalog";
@@ -153,6 +153,7 @@ export default function Cart() {
               <span className="oo-small text-strong">{t("Total", "합계")}</span>
               <span className="oo-price-l">{quote ? won(quote.total) : "…"}</span>
             </div>
+            {quote && <UsdNote usd={quote.usd} className="mt-1 text-right" />}
             <button
               type="button"
               className="oo-btn oo-btn-gold mt-6 w-full py-3.5"
