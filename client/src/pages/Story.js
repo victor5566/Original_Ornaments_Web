@@ -137,7 +137,7 @@ function ChapterVideo({ chapter }) {
           <span key={d.slug}>
             {i > 0 && " · "}
             <Link to={`/product/${d.slug}`} className="hover:text-gold">
-              {d.short || d.name}
+              {d.name}
             </Link>
           </span>
         ))}

@@ -11,22 +11,25 @@ import { lastDay } from "../lib/format";
 
 const POEM = {
   en: [
-    "On the longest night of the year, a small spell opens the forest path.",
-    "Follow the reindeer to a castle where candles are lit and snow drifts past the glass.",
-    "On Christmas Day in the morning, the white cat wanders to where the swans glide.",
+    "On the afternoon before the longest night, a white cat watches the snowy woods from a window warm with firelight.",
+    "Outside the window the cat was watching, snowflakes settle on a Christmas tree and candles glow in the snow around it.",
+    "On Christmas morning, a swan glides across a heart as if on ice.",
     "Where the angel's lantern falls, the night becomes a cathedral of light.",
     "Mother-of-pearl remembers that light, and keeps it in rainbow colors.",
     "Choose this year's light, and add it to your collection.",
   ],
   ko: [
-    "일 년 중 가장 긴 밤, 작은 마법 하나가 숲길을 엽니다.",
-    "순록을 따라 닿은 성에는 촛불이 켜지고, 창밖엔 눈꽃이 내립니다.",
-    "크리스마스 날 아침에, 하얀 고양이는 백조가 노래하듯 헤엄치는 곳으로.",
+    "일 년 중 가장 긴 밤을 앞둔 오후, 하얀 고양이가 벽난로 불빛이 번지는 창가에서 눈 내리는 숲을 바라봅니다.",
+    "고양이가 바라보던 창밖, 크리스마스 트리 위로 눈꽃이 내려앉고 눈 덮인 땅에는 초들이 불을 밝힙니다.",
+    "크리스마스 날 아침, 백조는 하트 위를 스케이트 타듯 미끄러집니다.",
     "천사의 등불이 닿는 순간, 밤은 빛의 성당이 됩니다.",
     "자개는 그 밤의 빛을 기억해, 무지개색으로 간직합니다.",
     "올해의 빛 하나를 골라, 당신의 컬렉션에 더하세요.",
   ],
 };
+
+// "Your Lights" (customer photos) stays hidden until there are real photos to show
+const SHOW_CUSTOMER_PHOTOS = false;
 
 // Each chapter sits a shade deeper into burgundy than the one before
 const CHAPTER_BG = ["bg-black", "bg-deep", "bg-dark", "bg-burgundy"];
@@ -48,7 +51,7 @@ export default function Home() {
       <FullCollection catalog={catalog} />
       <OneOfAKind catalog={catalog} />
       <TheBox />
-      <YourLights />
+      {SHOW_CUSTOMER_PHOTOS && <YourLights />}
       <Archive />
     </>
   );
@@ -64,7 +67,7 @@ function Hero({ catalog }) {
         <h1 className="oo-hero mt-5">The Magical Night</h1>
         <p className="oo-lead mt-6 max-w-md font-serif text-body">
           {t(
-            "On the longest night of the year, a magic quietly wakes. Choose this year's light from sixteen ornaments made of real mother-of-pearl.",
+            "On the longest night of the year, magic quietly wakes. Choose this year's light from sixteen ornaments made of real mother-of-pearl.",
             "일 년 중 가장 긴 밤, 아무도 모르게 마법이 깨어납니다. 진짜 자개로 만든 열여섯 개의 빛 중 올해의 하나를 골라 보세요."
           )}
         </p>
@@ -126,6 +129,11 @@ function Preorder({ catalog }) {
           <p className="mt-4 font-display text-2xl text-strong">
             {t(`Price ${won(prices.single)}`, `판매가 ${won(prices.single)}`)}
           </p>
+          {preorder.end && (
+            <p className="oo-caption mt-4 !text-muted">
+              {t(`From ${shortDate(preorder.end)}`, `${shortDate(preorder.end)}부터`)}
+            </p>
+          )}
         </div>
       </div>
     </section>
@@ -158,17 +166,14 @@ function Chapter({ chapter, catalog, bg }) {
   return (
     <section className={`${bg} py-20 sm:py-24`} aria-labelledby={`chapter-${chapter.slug}`}>
       <div className="oo-container">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <p className="oo-eyebrow">Chapter {chapter.numeral}</p>
             <h2 id={`chapter-${chapter.slug}`} className="oo-h2 mt-3">
               {pick(chapter, "name")}
             </h2>
           </div>
-          <div className="max-w-sm">
-            <p className="oo-small text-body">{pick(chapter, "intro")}</p>
-            <p className="oo-micro mt-1">{pick(catalog, "setNote")}</p>
-          </div>
+          <p className="oo-small max-w-sm text-body">{pick(chapter, "intro")}</p>
         </div>
 
         <ul className="mt-12 grid grid-cols-2 gap-x-5 gap-y-12 md:grid-cols-4">

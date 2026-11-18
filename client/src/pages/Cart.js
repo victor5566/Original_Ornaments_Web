@@ -116,7 +116,7 @@ export default function Cart() {
 
             <div className="oo-caption mt-4 space-y-0.5">
               {ko && freeOver != null && (
-                <p className="mb-3">{`${won(freeOver)} 초과 주문 무료 배송 · 버건디 상자 기본 포함`}</p>
+                <p className="mb-3">{`${won(freeOver)} 이상 주문 무료 배송 · 버건디 상자 기본 포함`}</p>
               )}
               {catalog.phase === "preorder" ? (
                 <>
@@ -145,6 +145,7 @@ export default function Cart() {
             </div>
             {!ko && (
               <p className="oo-caption mt-4">
+                {freeOver != null && `Free shipping in Korea on orders of ${won(freeOver)} or more. `}
                 Prices in Korean won (KRW). [Duties and taxes may apply outside Korea.] Burgundy box included.
               </p>
             )}
@@ -175,8 +176,8 @@ export default function Cart() {
 
             <div className="oo-caption mt-6 border-t border-dark pt-6">
               {t(
-                "Natural nacre varies in grain and color from piece to piece; this is not a defect. Damage or defects reported with photos within 48 hours of delivery are exchanged free.",
-                "천연 자개라 결과 빛깔이 하나하나 다르며, 이는 불량이 아닙니다. 파손·불량은 배송 완료 후 48시간 안에 사진으로 접수하면 무료 교환됩니다."
+                "Natural nacre varies in grain and color from piece to piece; this is not a defect. Damage or defects are replaced or refunded free. Photos within 48 hours get the fastest help.",
+                "천연 자개라 결과 빛깔이 하나하나 다르며, 이는 불량이 아닙니다. 파손·불량은 무료로 교환 또는 환불해 드립니다. 48시간 안에 사진으로 알려 주시면 가장 빨라요."
               )}
               <br />
               <button type="button" className="oo-link mt-1" onClick={() => setPolicyOpen(true)}>
@@ -206,7 +207,7 @@ function CartLine({ item, product, line, year, collection, onQty, onRemove }) {
   const name = product ? pick(product, "name") : item.sku;
   const isSingle = product?.kind === "single";
   const subtitle = isSingle
-    ? `Glow · ${year} ${collection}`
+    ? `${year} ${collection}`
     : product?.kind === "set"
       ? t(`${product.pieces} pieces · ${product.chapterName}`, `${product.pieces}개 · ${product.chapterNameKo}`)
       : t(`${product?.pieces ?? 16} pieces · ${year} ${collection}`, `${product?.pieces ?? 16}개 · ${year} ${collection}`);

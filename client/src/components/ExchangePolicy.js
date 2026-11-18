@@ -3,6 +3,8 @@ import { useLang } from "../i18n/LangContext";
 import { Placeholder, SparkleList } from "./Bits";
 
 // Exchange policy text in both languages, shared by the product page section and the pop-up from Cart and Checkout.
+// report: how to report, on the product page. reportModal: the same in the pop-up, whose last line also says
+// damage after delivery isn't covered.
 const POLICY = {
   en: {
     nacre:
@@ -19,25 +21,31 @@ const POLICY = {
       "A faulty hanging loop or ribbon",
       "The wrong design delivered",
     ],
-    reportWithin: "Report within 48 hours of delivery.",
-    howToReport: (email) => [
-      `Send at least 2 photos showing the box and both sides of the ornament to ${email || "[email]"}.`,
-      "Once confirmed, we replace it with the same design, or refund if it has sold out. We cover shipping both ways.",
-      "Reports after 48 hours, or damage from use, cannot be exchanged. Change-of-mind returns follow [separate terms].",
+    report: [
+      "Photos of the box and both sides of the ornament uploaded in our request form within 48 hours of delivery get the fastest help.",
+      "Damage or defects present on arrival are replaced with the same design or refunded. We cover shipping both ways.",
+      "Change-of-mind returns are accepted within 7 days of delivery.",
+    ],
+    reportModal: [
+      "Photos of the box and both sides of the ornament uploaded in our request form within 48 hours of delivery get the fastest help.",
+      "Damage or defects present on arrival are replaced with the same design or refunded. We cover shipping both ways.",
+      "Damage after delivery is not covered. Change-of-mind returns are accepted within 7 days of delivery.",
     ],
     photos: [
       {
-        label: "Photo needed\nTwo pieces of the same design side by side",
-        caption: "The same design, a different rainbow on each piece",
+        label: "Photo\nTiny dark flecks in the nacre",
+        src: "/photos/nacre-flecks.webp",
+        caption: "Tiny dark flecks are traces left as the shell grew",
       },
       {
-        label: "Photo needed\nReal sample, close up",
-        src: "/photos/nacre-sample.png",
+        label: "Photo\nReal sample, close up",
+        src: "/photos/nacre-close-up.webp",
         caption: "Real sample, close up. Wavy grain and fine lines are natural to nacre",
       },
       {
-        label: "Photo needed\nOne piece shot straight on and at an angle",
-        caption: "Color shifts with viewing angle and light",
+        label: "Photo\nTwo pieces of the same design side by side",
+        src: "/photos/nacre-compare.webp",
+        caption: "The same design, a different rainbow on each piece",
       },
     ],
   },
@@ -47,25 +55,31 @@ const POLICY = {
       "같은 디자인이라도 똑같은 두 개는 없습니다. 사진과 결이나 빛깔이 달라 보이는 건 불량이 아니라 천연 자개라는 표시예요.",
     variation: ["결의 방향과 무늬가 상세 사진과 다른 경우", "자개 고유의 가는 선, 점, 미세한 색 얼룩"],
     defects: ["깨짐, 금, 조각 떨어짐", "자개 들뜸이나 디자인 인쇄 불량", "걸이 고리·리본 불량", "주문과 다른 디자인 배송"],
-    reportWithin: "배송 완료 후 48시간 안에 접수해 주세요.",
-    howToReport: (email) => [
-      `상자와 제품 앞뒷면이 모두 보이는 사진 2장 이상을 ${email || "[이메일/카카오톡 채널]"}로 보내 주세요.`,
-      "확인 후 같은 디자인으로 교환합니다. 재고가 없으면 환불하며, 왕복 배송비는 저희가 부담합니다.",
-      "48시간이 지나거나 사용 중 생긴 파손은 교환이 어렵습니다. 단순 변심 반품은 [별도 기준]을 따릅니다.",
+    report: [
+      "받으신 뒤 48시간 안에 상자와 제품 앞뒷면 사진을 신청 창에 올려 주시면 가장 빠르게 처리해 드립니다.",
+      "받을 때 이미 있던 파손·불량은 같은 디자인으로 교환하거나 환불해 드립니다. 왕복 배송비는 저희가 부담합니다.",
+      "단순 변심 반품은 받은 날부터 7일 안에 가능합니다.",
+    ],
+    reportModal: [
+      "받으신 뒤 48시간 안에 상자와 제품 앞뒷면 사진을 신청 창에 올려 주시면 가장 빠르게 처리해 드립니다.",
+      "받을 때 이미 있던 파손·불량은 같은 디자인으로 교환하거나 환불해 드립니다. 왕복 배송비는 저희가 부담합니다.",
+      "받은 뒤 생긴 파손은 대상이 아닙니다. 단순 변심 반품은 받은 날부터 7일 안에 가능합니다.",
     ],
     photos: [
       {
-        label: "예시 사진 필요\n같은 디자인 2개를\n나란히 찍은 사진",
-        caption: "같은 디자인도 무지개빛이 하나하나 달라요",
+        label: "사진\n자개의 작은 반점",
+        src: "/photos/nacre-flecks.webp",
+        caption: "작은 반점은 조개가 자라며 남긴 흔적이에요",
       },
       {
-        label: "예시 사진 필요\n실제 샘플 확대",
-        src: "/photos/nacre-sample.png",
+        label: "사진\n실제 샘플 확대",
+        src: "/photos/nacre-close-up.webp",
         caption: "실제 샘플 확대. 물결 같은 결과 가는 선은 자개 고유의 무늬예요",
       },
       {
-        label: "예시 사진 필요\n같은 제품을 정면과\n비스듬히 찍은 사진 2장",
-        caption: "보는 각도와 조명에 따라 색이 바뀌어요",
+        label: "사진\n같은 디자인 2개를 나란히 찍은 사진",
+        src: "/photos/nacre-compare.webp",
+        caption: "같은 디자인도 무지개빛이 하나하나 달라요",
       },
     ],
   },
@@ -84,7 +98,7 @@ export function NacrePhotos({ className = "", captionClass = "text-muted" }) {
       {photos.map((p) => (
         <figure key={p.caption} className="flex items-center gap-4 sm:block">
           <div className="w-32 shrink-0 sm:w-auto">
-            <Placeholder label={p.label} src={p.src} imgClass="object-contain" className="aspect-square text-[11px]" />
+            <Placeholder label={p.label} src={p.src} imgClass="object-cover" className="aspect-square text-[11px]" />
           </div>
           <figcaption className={`oo-micro sm:mt-2 ${captionClass}`}>{p.caption}</figcaption>
         </figure>
@@ -103,7 +117,7 @@ function Heading({ title, note }) {
 }
 
 
-export function ExchangeModal({ open, onClose, contactEmail }) {
+export function ExchangeModal({ open, onClose }) {
   const closeRef = useRef(null);
   const { t } = useLang();
   const policy = usePolicy();
@@ -164,13 +178,13 @@ export function ExchangeModal({ open, onClose, contactEmail }) {
           </section>
 
           <section className="mt-6 border-t border-dark pt-6">
-            <Heading title={t("Damage & defects", "파손·불량")} note={t("Free exchange", "무료 교환")} />
+            <Heading title={t("Damage & defects", "파손·불량")} note={t("Free replacement or refund", "무료 교환·환불")} />
             <SparkleList items={policy.defects} className="mt-3" itemClass="oo-body text-strong" />
           </section>
 
           <section className="mt-6 border-t border-dark pt-6">
-            <Heading title={t("How to report", "접수 방법")} note={t("Within 48 hours of delivery", "배송 완료 후 48시간 안")} />
-            <SparkleList items={policy.howToReport(contactEmail)} className="mt-3" itemClass="oo-body text-strong" />
+            <Heading title={t("How to report", "접수 방법")} note={t("Photos within 48 hours recommended", "48시간 안 접수 권장")} />
+            <SparkleList items={policy.reportModal} className="mt-3" itemClass="oo-body text-strong" />
           </section>
 
           <button type="button" onClick={onClose} className="oo-btn oo-btn-gold mt-8 w-full py-3.5">

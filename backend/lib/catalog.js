@@ -61,7 +61,7 @@ async function loadCatalog() {
     discount: { minPieces: settings.launch_discount_min_pieces, percent: settings.launch_discount_percent },
     shipping: {
       feeKr: settings.shipping_fee_kr,
-      freeOver: settings.free_shipping_over, // Korea: free when the order is over this
+      freeOver: settings.free_shipping_over, // Korea: free when the order is this much or more
       feeIntl: settings.shipping_fee_intl, // null: not decided yet
     },
     contactEmail: settings.contact_email,

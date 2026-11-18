@@ -90,6 +90,7 @@ function ProductView({ catalog, chapter, design }) {
   const range = `${start}–${t(end.replace(/^\w+ /, ""), end.replace(/^\d+월 /, ""))}`;
   const ships = shortDate(dates.shipsFrom);
   const until = shortDate(lastDay(dates.end));
+  const freeOver = catalog.shipping.freeOver;
 
   return (
     <>
@@ -157,7 +158,7 @@ function ProductView({ catalog, chapter, design }) {
             </p>
 
             <div className="mt-6 border border-line p-5">
-              <p className="font-display text-2xl text-gold italic">{catalog.version.name}</p>
+              <p className="font-display text-2xl text-gold italic">{pick(catalog.version, "name")}</p>
               <p className="oo-micro mt-1 !text-muted">{pick(catalog.version, "description")}</p>
             </div>
 
@@ -201,6 +202,14 @@ function ProductView({ catalog, chapter, design }) {
                   "Arrives in a burgundy box with an 11 × 11 cm pamphlet inside.",
                   "버건디 상자에 담겨 갑니다. 상자 안에 11×11cm 팸플릿이 함께 들어 있습니다."
                 ),
+                ...(freeOver != null
+                  ? [
+                      t(
+                        `Free shipping in Korea on orders of ${won(freeOver)} or more.`,
+                        `${won(freeOver)} 이상 주문하시면 배송비가 무료입니다.`
+                      ),
+                    ]
+                  : []),
               ]}
             />
 
@@ -210,10 +219,7 @@ function ProductView({ catalog, chapter, design }) {
               </p>
               <p className="oo-micro mt-1 !text-muted">
                 {chapter.designs.map((d) => d.name.toUpperCase()).join(" · ")} ·{" "}
-                {t(
-                  `4 suede pouches · ${won(chapter.set.price)} (10% off)`,
-                  `스웨이드 파우치 4개 · ${won(chapter.set.price)} (10% 할인)`
-                )}
+                {t(`${won(chapter.set.price)} (10% off)`, `${won(chapter.set.price)} (10% 할인)`)}
               </p>
               <div className="mt-4 flex items-center gap-4">
                 <button type="button" className="oo-btn oo-btn-outline px-5 py-2 text-sm" onClick={set.order}>
@@ -255,21 +261,21 @@ function ProductView({ catalog, chapter, design }) {
         </div>
       </div>
 
-      <CareAndExchange contactEmail={catalog.contactEmail} />
+      <CareAndExchange />
       <MoreFromChapter chapter={chapter} current={design.slug} />
-      <ExchangeModal open={policyOpen} onClose={() => setPolicyOpen(false)} contactEmail={catalog.contactEmail} />
+      <ExchangeModal open={policyOpen} onClose={() => setPolicyOpen(false)} />
     </>
   );
 }
 
-function CareAndExchange({ contactEmail }) {
+function CareAndExchange() {
   const { t } = useLang();
   const policy = usePolicy();
   return (
     <section className="bg-deep py-20 sm:py-24">
       <div className="oo-container">
         <p className="oo-eyebrow">Care &amp; Exchange</p>
-        <h2 className="oo-h2 mt-3">{t("Natural variation & exchanges", "자개 개체차와 교환 안내")}</h2>
+        <h2 className="oo-h2 mt-3">{t("Natural variations & exchanges", "자개 개체차와 교환 안내")}</h2>
 
         <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_1.4fr]">
           <div>
@@ -287,16 +293,14 @@ function CareAndExchange({ contactEmail }) {
             <SparkleList items={policy.variation} className="mt-4" itemClass="oo-small text-body" />
           </div>
           <div className="border border-dark bg-black p-6">
-            <h3 className="oo-label !text-base">{t("Damage & defects (free exchange)", "파손·불량 (무료 교환)")}</h3>
+            <h3 className="oo-label !text-base">
+              {t("Damage & defects (free replacement or refund)", "파손·불량 (무료 교환·환불)")}
+            </h3>
             <SparkleList items={policy.defects} className="mt-4" itemClass="oo-small text-body" />
           </div>
           <div className="bg-dark p-6">
             <h3 className="oo-label !text-base">{t("How to report", "접수 방법")}</h3>
-            <SparkleList
-              items={[policy.reportWithin, ...policy.howToReport(contactEmail)]}
-              className="mt-4"
-              itemClass="oo-small text-body"
-            />
+            <SparkleList items={policy.report} className="mt-4" itemClass="oo-small text-body" />
           </div>
         </div>
       </div>

@@ -37,14 +37,13 @@ function ScrollManager() {
 // header: "full", "checkout" or "minimal"; footer only on browsing pages
 function Layout({ header = "full", footer = true }) {
   const { catalog } = useCatalog();
-  const { pathname } = useLocation();
   return (
     <div className="flex min-h-svh flex-col">
       <Header variant={header} />
       <main className="flex-1">
         <Outlet />
       </main>
-      {footer && <Footer contactEmail={pathname === "/story" ? (catalog?.contactEmail ?? null) : undefined} />}
+      {footer && <Footer contactEmail={catalog?.contactEmail} />}
     </div>
   );
 }

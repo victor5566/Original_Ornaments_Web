@@ -48,7 +48,7 @@ function discountFor(lines, settings) {
 function shippingFor(country, goods, settings) {
   if (!country) return null;
   if (country === "KR") {
-    const free = settings.free_shipping_over != null && goods > settings.free_shipping_over;
+    const free = settings.free_shipping_over != null && goods >= settings.free_shipping_over; // ₩50,000 or more
     return free ? 0 : settings.shipping_fee_kr;
   }
   return settings.shipping_fee_intl;

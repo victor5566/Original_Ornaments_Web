@@ -161,7 +161,7 @@ export default function Checkout() {
                     {product ? pick(product, "name") : item.sku}
                   </p>
                   <p className="oo-micro">
-                    {single ? "Glow" : t(`${product?.pieces ?? ""} pieces`, `${product?.pieces ?? ""}개`)} ·{" "}
+                    {!single && <>{t(`${product?.pieces ?? ""} pieces`, `${product?.pieces ?? ""}개`)} · </>}
                     {t("Qty", "수량")} {item.qty}
                   </p>
                 </div>
