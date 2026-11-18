@@ -171,7 +171,7 @@ function Chapter({ chapter, catalog, bg }) {
           </div>
         </div>
 
-        <ul className="mt-12 grid grid-cols-2 gap-x-5 gap-y-12 lg:grid-cols-4">
+        <ul className="mt-12 grid grid-cols-2 gap-x-5 gap-y-12 md:grid-cols-4">
           {chapter.designs.map((d) => (
             <li key={d.slug} className="text-center">
               <Link to={`/product/${d.slug}`} className="group block">
@@ -180,7 +180,7 @@ function Chapter({ chapter, catalog, bg }) {
                   name={d.name}
                   className="mx-auto w-full max-w-56 transition-transform duration-500 group-hover:scale-[1.03]"
                 />
-                <p className="oo-design-name mt-6 !text-base sm:!text-lg">{d.name}</p>
+                <p className="oo-design-name mt-6 !text-base sm:!text-lg md:!text-base lg:!text-lg">{d.name}</p>
               </Link>
               <p className="oo-design-line mt-2 !text-base text-body">{pick(d, "line")}</p>
               <p className="oo-micro mt-2">

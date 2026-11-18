@@ -106,9 +106,8 @@ function ProductView({ catalog, chapter, design }) {
           <span className="text-strong">{NAME}</span>
         </nav>
 
-        <div className="mt-6 grid gap-10 pb-24 lg:grid-cols-2 lg:gap-14">
-          {/* Gallery */}
-          <div>
+        <div className="mt-6 grid gap-10 pb-24 md:grid-cols-2 md:gap-8 lg:gap-14">
+          <div className="md:sticky md:top-6 md:self-start">
             <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-deep">
               <GalleryView
                 key={`${design.slug}-${VIEWS[view].id}`}
@@ -123,7 +122,7 @@ function ProductView({ catalog, chapter, design }) {
                 )}
               </p>
             </div>
-            <div className="mt-3 grid grid-cols-5 gap-2 sm:gap-3">
+            <div className="mt-3 grid grid-cols-5 gap-2 lg:gap-3">
               {views.map((label, i) => (
                 <button
                   key={label}
@@ -147,7 +146,7 @@ function ProductView({ catalog, chapter, design }) {
             </div>
           </div>
 
-          <div className="lg:max-w-md">
+          <div className="min-w-0 lg:max-w-md">
             <p className="oo-eyebrow">
               {catalog.year} · Chapter {chapter.numeral}
             </p>

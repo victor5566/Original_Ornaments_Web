@@ -79,11 +79,14 @@ export function usePolicy() {
 export function NacrePhotos({ className = "", captionClass = "text-muted" }) {
   const { photos } = usePolicy();
   return (
-    <div className={`grid grid-cols-3 gap-3 ${className}`}>
+    // Phones: one row per photo, caption beside it. Wider screens: three columns, caption below.
+    <div className={`grid gap-4 sm:grid-cols-3 sm:gap-3 ${className}`}>
       {photos.map((p) => (
-        <figure key={p.caption}>
-          <Placeholder label={p.label} src={p.src} imgClass="object-contain" className="aspect-square text-[11px]" />
-          <figcaption className={`oo-micro mt-2 ${captionClass}`}>{p.caption}</figcaption>
+        <figure key={p.caption} className="flex items-center gap-4 sm:block">
+          <div className="w-32 shrink-0 sm:w-auto">
+            <Placeholder label={p.label} src={p.src} imgClass="object-contain" className="aspect-square text-[11px]" />
+          </div>
+          <figcaption className={`oo-micro sm:mt-2 ${captionClass}`}>{p.caption}</figcaption>
         </figure>
       ))}
     </div>
