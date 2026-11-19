@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useCart } from "../cart/CartContext";
-import { ErrorText, PageState, UsdNote } from "../components/Bits";
+import { ErrorText, PageState, SparkleList, UsdNote } from "../components/Bits";
 import { ExchangeModal } from "../components/ExchangePolicy";
 import Ornament from "../components/Ornament";
 import PostcodeSearch from "../components/PostcodeSearch";
@@ -127,21 +127,32 @@ export default function Checkout() {
         )}
 
         <fieldset className="mt-12">
-          <legend className="oo-h3 !font-normal">{t("3. Payment", "3. 결제 수단")}</legend>
-          <div className="mt-6 border border-gold bg-dark p-5">
-            <p className="oo-label">PayPal</p>
-            <p className="oo-small mt-2 text-body">
-              {t(
-                "Pay with your PayPal account, or with a debit or credit card through PayPal. You don't need a PayPal account to pay by card.",
-                "PayPal 계정 또는 PayPal을 통한 신용·체크카드로 결제합니다. 카드 결제는 PayPal 계정이 없어도 돼요."
-              )}
+          <legend className="oo-h3 !text-[1.625rem] !font-light">{t("3. Payment", "3. 결제 수단")}</legend>
+          {/* Method tab (selected), then its details panel, as in the guideline */}
+          <div
+            aria-current="true"
+            className="mt-6 flex min-h-[3.875rem] flex-col items-center justify-center rounded border border-gold bg-dark px-4 py-2 text-center"
+          >
+            <p className="text-sm font-normal text-strong">PayPal</p>
+            <p className="text-xs font-normal text-subtle">
+              {t("Debit or credit card, or a PayPal account", "신용·체크카드 또는 PayPal 계정")}
             </p>
-            <p className="oo-caption mt-2">
-              {t(
-                "Prices are shown in won; PayPal charges the total in US dollars.",
-                "가격은 원화로 표시되며, 결제는 미국 달러(USD)로 진행됩니다."
-              )}
-            </p>
+          </div>
+          <div className="mt-3 rounded border border-line bg-panel p-6">
+            <SparkleList
+              itemClass="text-[0.9375rem] font-light leading-relaxed text-body"
+              items={[
+                t(
+                  "Pay with your PayPal account, or with a debit or credit card through PayPal.",
+                  "PayPal 계정 또는 PayPal을 통한 신용·체크카드로 결제합니다."
+                ),
+                t("You don't need a PayPal account to pay by card.", "카드 결제는 PayPal 계정이 없어도 돼요."),
+                t(
+                  "Prices are shown in won; PayPal charges the total in US dollars.",
+                  "가격은 원화로 표시되며, 결제는 미국 달러(USD)로 진행됩니다."
+                ),
+              ]}
+            />
           </div>
         </fieldset>
       </div>
@@ -268,7 +279,7 @@ function EnglishAddressForm({ field, shipAsGift, setShipAsGift }) {
   return (
     <>
       <fieldset className="mt-12">
-        <legend className="oo-h3 !font-normal">1. Contact</legend>
+        <legend className="oo-h3 !text-[1.625rem] !font-light">1. Contact</legend>
         <div className="mt-6 space-y-5">
           <Field label="Email">
             <input required type="email" autoComplete="email" className="oo-field" {...field("email")} />
@@ -280,7 +291,7 @@ function EnglishAddressForm({ field, shipAsGift, setShipAsGift }) {
       </fieldset>
 
       <fieldset className="mt-12">
-        <legend className="oo-h3 !font-normal">2. Shipping address</legend>
+        <legend className="oo-h3 !text-[1.625rem] !font-light">2. Shipping address</legend>
         <div className="mt-6 space-y-5">
           <Field label="Country / region">
             <select autoComplete="country" className="oo-field" {...field("country")}>
@@ -344,7 +355,7 @@ function KoreanAddressForm({ field, sameRecipient, setSameRecipient, onFindAddre
   return (
     <>
       <fieldset className="mt-12">
-        <legend className="oo-h3 !font-normal">1. 주문하는 분</legend>
+        <legend className="oo-h3 !text-[1.625rem] !font-light">1. 주문하는 분</legend>
         <div className="mt-6 space-y-5">
           <div className="grid gap-5 sm:grid-cols-2">
             <Field label="이름">
@@ -361,7 +372,7 @@ function KoreanAddressForm({ field, sameRecipient, setSameRecipient, onFindAddre
       </fieldset>
 
       <fieldset className="mt-12">
-        <legend className="oo-h3 !font-normal">2. 받는 분</legend>
+        <legend className="oo-h3 !text-[1.625rem] !font-light">2. 받는 분</legend>
         <div className="mt-6 space-y-5">
           <label className="oo-small flex cursor-pointer items-center gap-3 text-strong">
             <input
