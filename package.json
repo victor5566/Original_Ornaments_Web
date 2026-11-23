@@ -1,0 +1,17 @@
+{
+  "name": "original-ornaments",
+  "private": true,
+  "description": "Shortcuts for client/ (the site, and the packages the server in backend/ uses); npm run serve runs backend/server.js.",
+  "scripts": {
+    "setup": "npm ci --loglevel=error --no-audit --no-fund --prefix client",
+    "start": "npm start --prefix client",
+    "build": "npm run build --prefix client",
+    "serve": "npm run serve --prefix client",
+    "refund": "node backend/scripts/refund.js",
+    "ship": "node backend/scripts/ship.js",
+    "cancel-unpaid": "node backend/scripts/cancel-unpaid.js"
+  },
+  "engines": {
+    "node": "26.x"
+  }
+}

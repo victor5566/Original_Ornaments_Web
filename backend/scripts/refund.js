@@ -1,12 +1,11 @@
-// Refund a PayPal payment, from backend/:
-//   node scripts/refund.js OO-2026-0007              shows what would be refunded (nothing is sent)
-//   node scripts/refund.js OO-2026-0007 --yes        refunds everything that is left
-//   node scripts/refund.js OO-2026-0007 10.00 --yes  refunds $10.00
+// Refund a PayPal payment, from the repo root:
+//   npm run refund -- OO-2026-0007              shows what would be refunded (nothing is sent)
+//   npm run refund -- OO-2026-0007 --yes        refunds everything that is left
+//   npm run refund -- OO-2026-0007 10.00 --yes  refunds $10.00
 //   add --note "Damaged in transit" for a message to the buyer
-const path = require("path");
-require("dotenv").config({ path: path.join(__dirname, "..", ".env"), quiet: true });
-const { pool } = require("../db/pool");
-const { refundOrder } = require("../lib/operations");
+require("../app"); // first: makes client/node_modules resolvable and loads backend/.env
+const { pool } = require("../../db");
+const { refundOrder } = require("../api/operations");
 
 const args = process.argv.slice(2);
 let yes = false;
@@ -20,7 +19,7 @@ for (let i = 0; i < args.length; i++) {
 const [number, usd] = plain;
 
 (async () => {
-  if (!number) throw new Error("Usage: node scripts/refund.js <order number> [amount in USD] [--note \"…\"] [--yes]");
+  if (!number) throw new Error("Usage: npm run refund -- <order number> [amount in USD] [--note \"…\"] [--yes]");
   if (usd != null && !/^\d+(\.\d{1,2})?$/.test(usd)) throw new Error(`Not an amount: ${usd}`);
   console.log(`PayPal: ${process.env.PAYPAL_ENV === "live" ? "LIVE (real money)" : "sandbox"}`);
   const result = await refundOrder(number, { usd, note, dryRun: !yes });

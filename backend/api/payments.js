@@ -4,8 +4,8 @@
 //   2. the buyer approves it in the PayPal window
 //   3. finishPayPal: the server captures it, checks the amount, marks the order "paid" and sends the email
 // The amount always comes from the database, never from the browser.
-// markPaid and applyRefund are shared with the webhooks (lib/webhooks.js) and scripts/refund.js.
-const { pool, transaction } = require("../db/pool");
+// markPaid and applyRefund are shared with the webhooks (api/webhooks.js) and scripts/refund.js.
+const { pool, transaction } = require("../../db");
 const { loadSettings } = require("./catalog");
 const { toUsd, InputError } = require("./pricing");
 const { orderByToken, orderLines, placedInPreorder, addressLine, findOrder } = require("./orders");

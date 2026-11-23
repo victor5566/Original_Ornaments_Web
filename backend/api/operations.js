@@ -1,6 +1,6 @@
 // Store operations that run on the server only (no order link token): the unpaid-order cleanup
 // (started by server.js) and the scripts in backend/scripts (refund, ship).
-const { pool, transaction } = require("../db/pool");
+const { pool, transaction } = require("../../db");
 const paypal = require("./paypal");
 const { applyRefund, cents, dollars } = require("./payments");
 

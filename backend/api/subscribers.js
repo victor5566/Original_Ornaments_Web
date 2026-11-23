@@ -1,7 +1,7 @@
 // "Notify me" sign-ups from the home page (The archive section): people who want an email
 // when next year's light arrives. Signing up again with the same address only refreshes it,
 // and re-subscribes someone who had opted out.
-const { pool } = require("../db/pool");
+const { pool } = require("../../db");
 const { InputError } = require("./pricing");
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

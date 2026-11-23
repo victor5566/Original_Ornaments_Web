@@ -1,4 +1,5 @@
-
+// PostgreSQL pool and transaction(), shared by backend/api and backend/scripts (require("../../db")).
+// Connection settings are the PG* variables in backend/.env, loaded by backend/app.js.
 const { Pool, types } = require("pg");
 
 

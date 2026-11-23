@@ -1,6 +1,6 @@
 // Prices a cart from the database. The browser only sends product codes and quantities;
 // every price is looked up here.
-const { pool } = require("../db/pool");
+const { pool } = require("../../db");
 const { loadSettings, unitPrice } = require("./catalog");
 
 const MAX_QTY = 20;

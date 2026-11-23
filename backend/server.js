@@ -1,9 +1,9 @@
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
+const api = require("./app"); // first: makes client/node_modules resolvable
 const express = require("express");
 const helmet = require("helmet");
-const api = require("./app");
 
 const PORT = Number(process.env.SERVE_PORT) || 3000;
 const BUILD = path.join(__dirname, "..", "client", "build");
@@ -51,8 +51,8 @@ if (fs.existsSync(BUILD)) {
 
 app.listen(PORT, () => console.log(`Original Ornaments listening on http://localhost:${PORT}`));
 
-// Every hour: cancel PayPal orders left unpaid for UNPAID_ORDER_HOURS (lib/operations.js)
-const { cancelUnpaidOrders, UNPAID_HOURS } = require("./lib/operations");
+// Every hour: cancel PayPal orders left unpaid for UNPAID_ORDER_HOURS (api/operations.js)
+const { cancelUnpaidOrders, UNPAID_HOURS } = require("./api/operations");
 const cleanUp = () =>
   cancelUnpaidOrders().then(
     (numbers) => numbers.length && console.log(`Unpaid for over ${UNPAID_HOURS} h, cancelled: ${numbers.join(", ")}`),

@@ -1,5 +1,5 @@
 
-const { pool } = require("../db/pool");
+const { pool } = require("../../db");
 
 // Store settings. `phase` is the effective phase: once the pre-order end date has passed,
 // the store switches to "launch" by itself, without anyone editing the database.

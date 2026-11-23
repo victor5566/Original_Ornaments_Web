@@ -7,6 +7,11 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^13.5.0",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.3",
+    "helmet": "^8.3.0",
+    "nodemailer": "^10.6.0",
+    "pg": "^8.23.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-router-dom": "^7.18.5",
@@ -16,6 +21,7 @@
   "scripts": {
     "start": "craco start",
     "build": "craco build",
+    "serve": "node ../backend/server.js",
     "test": "craco test",
     "eject": "react-scripts eject"
   },

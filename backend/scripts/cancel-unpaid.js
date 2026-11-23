@@ -1,10 +1,9 @@
-// Cancel PayPal orders left unpaid for UNPAID_ORDER_HOURS (default 24), from backend/:
-//   node scripts/cancel-unpaid.js
+// Cancel PayPal orders left unpaid for UNPAID_ORDER_HOURS (default 24), from the repo root:
+//   npm run cancel-unpaid
 // server.js also does this every hour by itself.
-const path = require("path");
-require("dotenv").config({ path: path.join(__dirname, "..", ".env"), quiet: true });
-const { pool } = require("../db/pool");
-const { cancelUnpaidOrders, UNPAID_HOURS } = require("../lib/operations");
+require("../app"); // first: makes client/node_modules resolvable and loads backend/.env
+const { pool } = require("../../db");
+const { cancelUnpaidOrders, UNPAID_HOURS } = require("../api/operations");
 
 cancelUnpaidOrders()
   .then((numbers) => console.log(`Unpaid for over ${UNPAID_HOURS} h, cancelled: ${numbers.length ? numbers.join(", ") : "none"}`))

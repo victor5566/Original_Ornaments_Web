@@ -6,7 +6,7 @@
 // payment_events (PayPal sends the same event again until we answer 200).
 const crypto = require("crypto");
 const zlib = require("zlib");
-const { transaction } = require("../db/pool");
+const { transaction } = require("../../db");
 const { orderById } = require("./orders");
 const { markPaid, captureMatches, applyRefund, sendPaidEmail } = require("./payments");
 

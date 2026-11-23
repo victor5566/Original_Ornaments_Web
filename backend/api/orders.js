@@ -1,7 +1,7 @@
 // Saves an order: checks the checkout form, prices the cart from the database and writes
-// orders + order_items in one transaction. The order stays "pending" until PayPal is paid (lib/payments.js).
+// orders + order_items in one transaction. The order stays "pending" until PayPal is paid (api/payments.js).
 const crypto = require("crypto");
-const { pool, transaction } = require("../db/pool");
+const { pool, transaction } = require("../../db");
 const { quote, toUsd, InputError } = require("./pricing");
 
 const COUNTRIES = new Set(["KR", "JP", "TW", "HK", "SG", "US", "CA", "GB", "AU"]);
@@ -170,7 +170,7 @@ async function createOrder(body) {
     });
   });
 
-  // The confirmation email goes out once PayPal is paid (lib/payments.js)
+  // The confirmation email goes out once PayPal is paid (api/payments.js)
   return { ...order, token };
 }
 
